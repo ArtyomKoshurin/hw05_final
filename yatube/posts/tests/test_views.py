@@ -216,6 +216,7 @@ class TestPaginator(TestCase):
                 group=self.group,
             ) for i in range(POST_CREATE)]
         )
+        cache.clear()
 
     def test_paginator_pages(self):
         """Тестируем работу паджинатора у главной страницы,
