@@ -38,13 +38,11 @@ class TestViewPosts(TestCase):
             text='Тестовый коммент',
             post=cls.post,
         )
-
-    def setUp(self):
-        self.user = User.objects.create_user(username='test_user')
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        self.post_author = Client()
-        self.post_author.force_login(self.author)
+        cls.user = User.objects.create_user(username='test_user')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.post_author = Client()
+        cls.post_author.force_login(cls.author)
         cache.clear()
 
     def test_cache_is_working(self):
@@ -60,6 +58,7 @@ class TestViewPosts(TestCase):
     def test_templates_users(self):
         """Тестируем соответствие шаблонов, вызываемых view-функциями
         (используется учетная запись автора поста)."""
+        cache.clear()
         templates_used = {
             reverse('posts:post_create'): 'posts/create_post.html',
             reverse('posts:main_page'): 'posts/index.html',
@@ -84,6 +83,7 @@ class TestViewPosts(TestCase):
 
     def test_pages_show_correct_context(self):
         """Шаблоны страниц сформированы с правильынм контекстом."""
+        cache.clear()
         response_home = self.authorized_client.get(reverse(
             'posts:main_page')).context['page_obj'][0]
         response_group = self.authorized_client.get(reverse(
@@ -177,6 +177,7 @@ class TestViewPosts(TestCase):
 
     def test_image_is_on_pages(self):
         """Тестируем отображение картинок на страницах сайта."""
+        cache.clear()
         response_home = self.authorized_client.get(
             reverse('posts:main_page')).context['page_obj'][0]
         response_profile = self.authorized_client.get(
@@ -221,7 +222,6 @@ class TestPaginator(TestCase):
     def test_paginator_pages(self):
         """Тестируем работу паджинатора у главной страницы,
         страницы группы и страницы поста."""
-
         response_values = {
             self.guest_client.get(
                 reverse('posts:main_page')): settings.POSTS_ON_PAGE,

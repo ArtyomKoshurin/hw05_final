@@ -24,14 +24,12 @@ class PostsURLTests(TestCase):
             text='Тестовый пост группы',
             group=cls.group,
         )
-
-    def setUp(self):
-        self.guest_client = Client()
-        self.user = User.objects.create_user(username='Authorized')
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        self.post_author = Client()
-        self.post_author.force_login(self.author)
+        cls.guest_client = Client()
+        cls.user = User.objects.create_user(username='Authorized')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.post_author = Client()
+        cls.post_author.force_login(cls.author)
         cache.clear()
 
     def test_allusers_page(self):
@@ -77,6 +75,7 @@ class PostsURLTests(TestCase):
 
     def test_templates_posts(self):
         """Тестируем шаблоны."""
+        cache.clear()
         templates_urls = {
             '/': 'posts/index.html',
             f'/group/{self.group.slug}/': 'posts/group_list.html',

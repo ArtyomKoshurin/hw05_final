@@ -34,23 +34,7 @@ class TestViewPosts(TestCase):
             text='Тестовый пост группы',
             group=cls.group,
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
-
-    def setUp(self):
-        self.user = User.objects.create_user(username='test_user')
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        self.logged_author_of_post = Client()
-        self.logged_author_of_post.force_login(self.author)
-
-    def test_create_new_post(self):
-        """Валидная форма создает новую запись в БД."""
-        posts_count = Post.objects.count()
-        small_gif = (
+        cls.small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
             b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
@@ -58,9 +42,23 @@ class TestViewPosts(TestCase):
             b'\x02\x00\x01\x00\x00\x02\x02\x0C'
             b'\x0A\x00\x3B'
         )
+        cls.user = User.objects.create_user(username='test_user')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.logged_author_of_post = Client()
+        cls.logged_author_of_post.force_login(cls.author)
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
+    def test_create_new_post(self):
+        """Валидная форма создает новую запись в БД."""
+        posts_count = Post.objects.count()
         uploaded = SimpleUploadedFile(
             name='small.gif',
-            content=small_gif,
+            content=self.small_gif,
             content_type='image/gif'
         )
         form_data = {

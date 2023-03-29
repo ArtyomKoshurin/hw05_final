@@ -34,14 +34,7 @@ def profile_follow(request, username):
     follow = Follow.objects.filter(user=request.user, author=author)
     if request.user != author and not follow.exists():
         Follow.objects.create(user=request.user, author=author)
-    posts = author.posts.all()
-    page_obj = CastomPaginator(request, posts)
-    context = {
-        'author': author,
-        'page_obj': page_obj,
-        'following': True,
-    }
-    return render(request, 'posts/profile.html', context)
+    return redirect('posts:profile', username=username)
 
 
 @login_required
@@ -50,14 +43,7 @@ def profile_unfollow(request, username):
     following = Follow.objects.filter(user_id=request.user, author=author)
     if following.exists():
         following.delete()
-    posts = author.posts.all()
-    page_obj = CastomPaginator(request, posts)
-    context = {
-        'author': author,
-        'page_obj': page_obj,
-        'following': False,
-    }
-    return render(request, 'posts/profile.html', context)
+    return redirect('posts:profile', username=username)
 
 
 def group_posts(request, any_slug):
@@ -71,14 +57,19 @@ def group_posts(request, any_slug):
     }
     return render(request, template, context)
 
+# Не могу придумать что то лучше, т. к. на страницу профиля может заходить
+# любой пользователь, в т.ч неавторизованный. При попытке изменить условия
+# для облегчения кода у меня получается, что либо может заходить только
+# авторизованный, либо неавторизованному не передается никакого контекста
+
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
     page_obj = CastomPaginator(request, posts)
-    if request.user.is_authenticated is True:
+    if request.user.is_authenticated and request.user != author:
         follower = Follow.objects.filter(user_id=request.user, author=author)
-        if request.user != author and not follower.exists():
+        if not follower.exists():
             following = False
         else:
             following = True
@@ -122,21 +113,22 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     form = PostForm(
-        request.POST,
+        request.POST or None,
         files=request.FILES or None,
     )
-    if request.method == 'POST':
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('posts:profile', username=request.user)
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        post.save()
+        return redirect('posts:profile', username=request.user)
     return render(request, 'posts/create_post.html', {'form': form})
 
 
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    if request.user != post.author:
+        return redirect('posts:post_detail', post_id=post_id)
     form = PostForm(
         request.POST or None,
         files=request.FILES or None,
@@ -147,8 +139,6 @@ def post_edit(request, post_id):
         'is_edit': True,
         'post': post,
     }
-    if request.user != post.author:
-        return redirect('posts:post_detail', post_id=post_id)
     if not form.is_valid():
         return render(request, 'posts/create_post.html', context)
     form.save()
