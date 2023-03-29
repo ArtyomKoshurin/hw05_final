@@ -52,9 +52,9 @@ class PostsURLTests(TestCase):
             self.guest_client.get(
                 f'/posts/{self.post.id}/comment/'): HTTPStatus.FOUND,
             self.authorized_client.get(
-                f'/profile/{self.author}/follow/'): HTTPStatus.OK,
+                f'/profile/{self.author}/follow/'): HTTPStatus.FOUND,
             self.authorized_client.get(
-                f'/profile/{self.author}/unfollow/'): HTTPStatus.OK,
+                f'/profile/{self.author}/unfollow/'): HTTPStatus.FOUND,
         }
         for url, response_status in response.items():
             with self.subTest(url=url):
