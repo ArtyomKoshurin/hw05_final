@@ -57,32 +57,24 @@ def group_posts(request, any_slug):
     }
     return render(request, template, context)
 
-# Не могу придумать что то лучше, т. к. на страницу профиля может заходить
-# любой пользователь, в т.ч неавторизованный. При попытке изменить условия
-# для облегчения кода у меня получается, что либо может заходить только
-# авторизованный, либо неавторизованному не передается никакого контекста
+# Все, теперь вроде разобрался, спасибо!
 
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
     page_obj = CastomPaginator(request, posts)
-    if request.user.is_authenticated and request.user != author:
-        follower = Follow.objects.filter(user_id=request.user, author=author)
-        if not follower.exists():
-            following = False
-        else:
-            following = True
-        context = {
-            'author': author,
-            'page_obj': page_obj,
-            'following': following,
-        }
+    follower = request.user.is_authenticated and Follow.objects.filter(
+        user_id=request.user, author=author).exists()
+    if follower and request.user != author:
+        following = True
     else:
-        context = {
-            'author': author,
-            'page_obj': page_obj,
-        }
+        following = False
+    context = {
+        'author': author,
+        'page_obj': page_obj,
+        'following': following,
+    }
     return render(request, 'posts/profile.html', context)
 
 
